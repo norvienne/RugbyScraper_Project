@@ -18,3 +18,11 @@ I took like 3hrs cuz i couldnt connect the database but all worst is for best
 Another 30 mins gone for other 2 tables  but they were similar so it was easy :(
 
 ----------------------------------------
+
+[2 Mar 2025 22:06]
+Created Scrape Log table 
+Added unique constraint thing to Standings Table 
+Updated Create Matches Table today 
+Im Actually so BORED of those databases cuz i do like couple of them a day
+Also today i had my physics assigment and it was kinda easy even tho i was worrying about it a lot ill also have it on wednesday
+----------------------------------------

@@ -53,7 +53,7 @@ def create_competitions_table():
     print("Competitions table created successfully")
 
 
-# standings table (league standings for each competition)
+# standings table (league standings for each competition) ps added constraint thing
 def create_standings_table():
     connection = create_connection()
     cursor = connection.cursor()
@@ -71,7 +71,8 @@ def create_standings_table():
             points INTEGER,
             scraped_date TEXT,
             FOREIGN KEY (team_id) REFERENCES teams (team_id),
-            FOREIGN KEY (competition_id) REFERENCES competitions (competition_id)
+            FOREIGN KEY (competition_id) REFERENCES competitions (competition_id),
+            UNIQUE (team_id, competition_id, scraped_date)
         )
     """)
 
@@ -94,7 +95,8 @@ def create_matches_table():
             home_score INTEGER,
             away_score INTEGER,
             match_date TEXT,
-            FOREIGN KEY (competition_id) REFERENCES competitions (competition_id)
+            FOREIGN KEY (competition_id) REFERENCES competitions (competition_id),
+            UNIQUE (competition_id, home_team, away_team, match_date)
         )
     """)
 
@@ -103,8 +105,28 @@ def create_matches_table():
     print("Matches table created successfully")
 
 
+# Scrape log table (stores info of each scrape)
+def create_scrape_log_table():
+    connection = create_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS scrape_log (
+            log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            scraped_at TEXT NOT NULL,
+            records_found INTEGER,
+            status TEXT
+        )
+    """)
+
+    connection.commit()
+    connection.close()
+    print("Scrape log table created successfully")
+
+
 # run to make sure it works
 create_teams_table()
 create_competitions_table()
 create_standings_table()
 create_matches_table()
+create_scrape_log_table()
