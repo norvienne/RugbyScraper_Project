@@ -27,3 +27,12 @@ Add helper functions for inserting data
 Im Actually so BORED of those databases cuz i do like couple of them a day
 Also today i had my physics assigment and it was kinda easy even tho i was worrying about it a lot ill also have it on wednesday
 ----------------------------------------
+
+[5 Mar 2025 16:38]
+I missed 3 days because i broke my foot while playing rugby somehow 
+Started the scraper today. First try got a 403 error from ESPN.
+Fixed it by adding browser headers so ESPN thinks we are a real browser.
+Feels good that the error made sense and i knew how to fix it.
+
+
+
