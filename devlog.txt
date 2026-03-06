@@ -48,4 +48,6 @@ also sort out import list like wtffff thats too hard
 six nations standings are now properly saved to db!
 added a really cool logo animation
 also i added really cool choosing of competition thing
+i also added a coloured table while watching wales vs ireland game 
+this day i ahd loads of progress and i think it is really good 
 

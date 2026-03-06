@@ -10,6 +10,7 @@ from database import (
 )
 from datetime import date
 
+# ESPN always bloks the request without the real browser user , so i made it look like normal human browsing
 request_headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",  # cspell:ignore KHTML
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -18,6 +19,7 @@ request_headers = {
 
 
 def fetch_espn_page(url):
+    # returns html string or None if something goes wrong
     try:
         response = requests.get(url, headers=request_headers, timeout=10)
         response.raise_for_status()
@@ -38,7 +40,7 @@ def fetch_espn_page(url):
 
 
 def _find_stats_table(soup):
-    # ESPN somehow splits standings into two tables i need the one without fixed-left ngl idk why would they even do this in the first place but here i am trying to work around it
+    # ESPN splits standings into two tables i need the one without fixed-left
     tables = soup.find_all("table")
     for table in tables:
         classes = table.get("class") or []
@@ -82,7 +84,7 @@ def parse_standings(html):
         name_tag = team_row.find("span", class_="hide-mobile")
         team_name = name_tag.text.strip() if name_tag else "unknown"
 
-        # order: GP W D L BYE F A TF TA TBP LBP BP PD P (this is like a note to myself cuz i couldnt remember it mb)
+        # stat order: GP W D L BYE F A TF TA TBP LBP BP PD P so i dont forget
         stat_cells = stat_row.find_all("span", class_="stat-cell")
         if len(stat_cells) < 14:
             continue
@@ -104,6 +106,7 @@ def parse_standings(html):
 
 
 def scrape_and_save(competition_id, url):
+    # sets up db, fetches + parses standing it also saves everything in 1 thing function ngl but it works and i dont care enough to refactor it
     initialise_database()
     insert_competition("Six Nations", "international", "2026")
     html = fetch_espn_page(url)
@@ -116,6 +119,7 @@ def scrape_and_save(competition_id, url):
     for row in standings:
         insert_team(row["team_name"], None, None, None)
 
+        # here it searches for team_id after inserting ik it is inneficient but it kinda works TvT
         conn = create_connection()
         cursor = conn.cursor()
         cursor.execute(
