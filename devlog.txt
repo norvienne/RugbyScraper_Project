@@ -31,8 +31,15 @@ Also today i had my physics assigment and it was kinda easy even tho i was worry
 [5 Mar 2025 16:38]
 I missed 3 days because i broke my foot while playing rugby somehow 
 Started the scraper today. First try got a 403 error from ESPN.
-Fixed it by adding browser headers so ESPN thinks we are a real browser.
-Feels good that the error made sense and i knew how to fix it.
+Fixed it by adding browser headers so ESPN thinks we are a real browser
+Feels good that the error made sense and i knew how to fix it
+Parsing finally works after fighting ESPN's split table layout like wtf who even uses ts  
+also had to find the stats table manually by checking classes. France top of 
+Six Nations with 15 points, Wales bottom with 1 even tho its real data it was hard to get i spent like 3hr on it :(
 
+----------------------------------------
 
+[6 Mar 2025 09:01]
+Soooo im home today due to my leg so im going to add more stuff than i usually do
+Ok so rn i finished the scrapper.py where i added one of the most important parts function called parse_standings() it is made to get team data from ESPN HTML page bro but it took me like 4 hours somehow cuz i was refactoring code but omg it takes so long 
 
