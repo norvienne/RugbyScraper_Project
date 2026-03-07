@@ -16,7 +16,7 @@
 
 A terminal app for live rugby scores and stats, with a focus on clean, readable code. Built to look great in the terminal, easy to use, and fun for rugby fans!
 
-[![GitHub](https://img.shields.io/badge/GitHub-norvienne-black?logo=github)](https://github.com/norvienne)
+[![GitHub](https://img.shields.io/badge/GitHub-HlibSamodin-black?logo=github)](https://github.com/HlibSamodin)
 
 #### 📝 Btw there is a DevLog so check it out!!
 
@@ -90,6 +90,6 @@ python main.py
 <div align="center">
   <img width="230" height="230" alt="image" src="https://github.com/user-attachments/assets/03bf1d2e-a5e7-4781-9a46-9294fe24b421"/>
 
-Made with ❤️ by <a href="https://github.com/norvienne">norvienne</a>
+Made with ❤️ by <a href="https://github.com/HlibSamodin">HlibSamodin</a>
 
 </div>

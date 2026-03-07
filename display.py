@@ -4,11 +4,11 @@ import random
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich import box
 from rich.live import Live
 from rich.spinner import Spinner
 
 console = Console()
-
 LOGO = """
 ██████╗ ██╗   ██╗ ██████╗ ██████╗ ██╗   ██╗
 ██╔══██╗██║   ██║██╔════╝ ██╔══██╗╚██╗ ██╔╝
@@ -24,14 +24,14 @@ LOGO = """
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝
 """
 
-TAGLINE = "                                        by norvienne 🏉"
+TAGLINE = "                                        by HlibSamodin 🏉"
 
 ABOUT_TEXT = """
 ╔════════════════════════════════════════════════════════╗
 ║                  ABOUT RUGBYSCRAPER                    ║
 ╚════════════════════════════════════════════════════════╝
 
-  Built by norvienne — a 15 year old rugby fan who read
+  Built by HlibSamodin — a 15 year old rugby fan who read
   Clean Code by Robert C. Martin and wanted to build
   something real to practice better coding.
 
@@ -39,7 +39,7 @@ ABOUT_TEXT = """
   actually care about. This project scrapes live rugby
   data from ESPN and displays it in a clean terminal UI.
 
-  github.com/norvienne
+  github.com/HlibSamodin
 """
 
 # each entry: (menu key, region tag, display name)
@@ -137,7 +137,6 @@ def clear_screen():
 
 
 def animate_logo():
-    # types the logo line by line then clears before menu
     clear_screen()
     for line in LOGO.splitlines():
         console.print(line, style="bold green")
@@ -148,7 +147,6 @@ def animate_logo():
 
 
 def flicker():
-    # CRT monitor turning on effect
     for _ in range(4):
         clear_screen()
         time.sleep(0.05)
@@ -158,13 +156,11 @@ def flicker():
 
 
 def animate_exit():
-    # mega glitch exit animation
     clear_screen()
     console.print("\n\n  [bold green]Thanks for visiting RugbyScraper 🏉[/bold green]")
-    console.print("  [dim green]See you next time, norvienne![/dim green]\n")
+    console.print("  [dim green]See you next time, HlibSamodin![/dim green]\n")
     time.sleep(1.0)
 
-    # glitch phase - random chars flood the screen
     for _ in range(10):
         clear_screen()
         lines = []
@@ -177,8 +173,7 @@ def animate_exit():
         )
         time.sleep(0.07)
 
-    # logo flickers back in broken pieces
-    logo_lines = [l for l in LOGO.splitlines() if l.strip()]
+    logo_lines = [line for line in LOGO.splitlines() if line.strip()]
     for i in range(6):
         clear_screen()
         for j, line in enumerate(logo_lines):
@@ -192,14 +187,12 @@ def animate_exit():
                 console.print(" " * len(line))
         time.sleep(0.1)
 
-    # final clean logo flash
     clear_screen()
     for line in LOGO.splitlines():
         console.print(line, style="bold green")
     console.print(TAGLINE, style="dim green")
     time.sleep(0.5)
 
-    # fade out line by line
     logo_lines_full = LOGO.splitlines()
     for i in range(len(logo_lines_full)):
         clear_screen()
@@ -212,7 +205,6 @@ def animate_exit():
 
 
 def animate_menu():
-    # flicker then slide menu items in one by one
     flicker()
     time.sleep(0.1)
 
@@ -242,7 +234,6 @@ def animate_menu():
 
 
 def get_row_style(position, total_teams):
-    # gold for 1st, green for top 3, red for last, white for middle
     if position == 1:
         return "bold yellow"
     elif position <= 3:
@@ -254,7 +245,6 @@ def get_row_style(position, total_teams):
 
 
 def animate_banner(competition_key):
-    # typewriter effect with competition-specific colour
     if competition_key not in COMPETITION_BANNERS:
         return
     colour = COMPETITION_COLOURS.get(competition_key, "bold white")
@@ -264,7 +254,6 @@ def animate_banner(competition_key):
 
 
 def show_about():
-    # displays info about the project and author
     clear_screen()
     for line in ABOUT_TEXT.splitlines():
         console.print(line, style="bold green")
@@ -273,14 +262,12 @@ def show_about():
 
 
 def show_standings(competition_name, standings, competition_key=None):
-    # builds and prints the standings table with colour coded rows
     clear_screen()
 
     if competition_key:
         animate_banner(competition_key)
         time.sleep(0.2)
 
-    # show competition description
     if competition_key and competition_key in COMPETITION_DESCRIPTIONS:
         console.print(
             Panel(
@@ -336,13 +323,43 @@ def show_standings(competition_name, standings, competition_key=None):
         )
     )
 
-    # returns "e" if user wants to export, anything else goes back
     return console.input(
-        "\n[dim]  press enter to go back / e to export to csv...[/dim] "
+        "\n[dim]  press enter to go back / e to export / r for results...[/dim] "
     )
 
 
+def show_results(competition_name, results, competition_key=None):
+    colour = COMPETITION_COLOURS.get(competition_key or "", "bold white")
+
+    clear_screen()
+    console.print(f"\n[{colour}]  {competition_name} — Recent Results[/{colour}]\n")
+
+    if not results:
+        console.print("[dim]no results found.[/dim]\n")
+    else:
+        table = Table(
+            show_header=True,
+            header_style=colour,
+            box=box.SIMPLE,
+            padding=(0, 2),
+        )
+        table.add_column("Home", style="bold white", justify="right")
+        table.add_column("Score", style="bold yellow", justify="center")
+        table.add_column("Away", style="bold white", justify="left")
+
+        for r in results:
+            table.add_row(
+                r["home"],
+                f"{r['home_score']} - {r['away_score']}",
+                r["away"],
+            )
+
+        console.print(table)
+
+    console.print("[dim]press enter to go back[/dim]")
+    input()
+
+
 def show_loading_spinner(message="fetching data..."):
-    # shows a spinner while fetching from ESPN
     with Live(Spinner("dots", text=f"[green]{message}[/green]"), refresh_per_second=10):
         time.sleep(2)

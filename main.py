@@ -2,12 +2,13 @@ from display import (
     animate_logo,
     animate_menu,
     show_standings,
+    show_results,
     show_loading_spinner,
     show_about,
     clear_screen,
     animate_exit,
 )
-from scraper import fetch_espn_page, parse_standings, scrape_and_save
+from scraper import fetch_espn_page, parse_standings, parse_results, scrape_and_save
 from competitions import COMPETITIONS
 from database import initialise_database
 from exporter import export_standings_to_csv
@@ -43,6 +44,7 @@ def handle_choice(choice):
     )
 
     result = show_standings(f"{comp['name']} {comp['season']}", standings, choice)
+
     if result == "e":
         path = export_standings_to_csv(int(choice), comp["name"])
         if path:
@@ -51,14 +53,25 @@ def handle_choice(choice):
             console.print("\n[red]  nothing to export yet[/red]")
         console.input("\n[dim]  press enter to go back...[/dim]")
 
+    elif result == "r":
+        if comp["results_url"] is None:
+            clear_screen()
+            console.print(
+                f"\n[yellow]  no results available for {comp['name']} yet[/yellow]"
+            )
+            console.input("\n[dim]  press enter to go back...[/dim]")
+            return
+        show_loading_spinner(f"fetching {comp['name']} results...")
+        results_html = fetch_espn_page(comp["results_url"])
+        results = parse_results(results_html)
+        show_results(f"{comp['name']} {comp['season']}", results, choice)
+
 
 def main():
     animate_logo()
     initialise_database()
-
     while True:
         choice = animate_menu()
-
         if choice == "q":
             animate_exit()
             break
