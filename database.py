@@ -3,26 +3,20 @@ import os
 from datetime import datetime
 
 
-# took me a while to figure this out but this gets the correct path to the database
-# os.path.abspath(__file__) gets the full path of this file
 def get_database_path():
     base_directory = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_directory, "data", "rugby.db")
 
 
-# i kept repeating sqlite3.connect everywhere so i made this
-# also foreign keys are off by default in sqlite which is annoying so i turn them on here
 def create_connection():
     connection = sqlite3.connect(get_database_path())
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
 
-# teams table - stores basic info about each rugby team
 def create_teams_table():
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS teams (
@@ -34,18 +28,15 @@ def create_teams_table():
             )
         """)
         connection.commit()
-        print("teams table ready")
     except sqlite3.Error as e:
         print(f"error creating teams table: {e}")
     finally:
         connection.close()
 
 
-# competitions table - six nations, premiership, urc etc
 def create_competitions_table():
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS competitions (
@@ -56,19 +47,15 @@ def create_competitions_table():
             )
         """)
         connection.commit()
-        print("competitions table ready")
     except sqlite3.Error as e:
         print(f"error creating competitions table: {e}")
     finally:
         connection.close()
 
 
-# standings per competition
-# added UNIQUE on team_id + competition_id + date so i dont get duplicate rows
 def create_standings_table():
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS standings (
@@ -88,18 +75,15 @@ def create_standings_table():
             )
         """)
         connection.commit()
-        print("standings table ready")
     except sqlite3.Error as e:
         print(f"error creating standings table: {e}")
     finally:
         connection.close()
 
 
-# match results - UNIQUE stops same match being saved twice
 def create_matches_table():
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS matches (
@@ -115,18 +99,15 @@ def create_matches_table():
             )
         """)
         connection.commit()
-        print("matches table ready")
     except sqlite3.Error as e:
         print(f"error creating matches table: {e}")
     finally:
         connection.close()
 
 
-# logs every scrape so i can see when data was last pulled and if it worked
 def create_scrape_log_table():
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS scrape_log (
@@ -137,22 +118,17 @@ def create_scrape_log_table():
             )
         """)
         connection.commit()
-        print("scrape_log table ready")
     except sqlite3.Error as e:
         print(f"error creating scrape_log table: {e}")
     finally:
         connection.close()
 
 
-# inserts a team - OR IGNORE means it wont crash if the team already exists
 def insert_team(team_name, short_name, country, league):
     if not team_name:
-        print("team_name cant be empty")
         return
-
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute(
             """
@@ -170,12 +146,9 @@ def insert_team(team_name, short_name, country, league):
 
 def insert_competition(competition_name, competition_type, season):
     if not competition_name:
-        print("competition_name cant be empty")
         return
-
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute(
             """
@@ -196,7 +169,6 @@ def insert_standing(
 ):
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute(
             """
@@ -228,7 +200,6 @@ def insert_match(
 ):
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute(
             """
@@ -245,11 +216,9 @@ def insert_match(
         connection.close()
 
 
-# logs each scrape with timestamp so i can track history
 def log_scrape(records_found, status):
     connection = create_connection()
     cursor = connection.cursor()
-
     try:
         cursor.execute(
             """
@@ -265,15 +234,14 @@ def log_scrape(records_found, status):
         connection.close()
 
 
-# wrap all the create table functions in one so i can just call this to set up the database
 def initialise_database():
     create_teams_table()
     create_competitions_table()
     create_standings_table()
     create_matches_table()
     create_scrape_log_table()
-    print("database ready!")
 
 
 if __name__ == "__main__":
     initialise_database()
+    print("database ready!")

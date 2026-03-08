@@ -9,6 +9,7 @@ from rich.live import Live
 from rich.spinner import Spinner
 
 console = Console()
+
 LOGO = """
 ██████╗ ██╗   ██╗ ██████╗ ██████╗ ██╗   ██╗
 ██╔══██╗██║   ██║██╔════╝ ██╔══██╗╚██╗ ██╔╝
@@ -322,6 +323,9 @@ def show_standings(competition_name, standings, competition_key=None):
             padding=(0, 2),
         )
     )
+
+    timestamp = time.strftime("%H:%M:%S")
+    console.print(f"[dim]  last updated: {timestamp}[/dim]")
 
     return console.input(
         "\n[dim]  press enter to go back / e to export / r for results...[/dim] "
