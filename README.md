@@ -99,7 +99,6 @@ Then pick a competition from the menu:
 ---
 
 <div align="center">
-<img width="230" height="230" alt="image" src="https://github.com/user-attachments/assets/03bf1d2e-a5e7-4781-9a46-9294fe24b421"/>
 
 Made with ❤️ by <a href="https://github.com/HlibSamodin11">HlibSamodin</a>
 
