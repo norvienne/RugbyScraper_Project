@@ -2,7 +2,7 @@
 Hello this is my devlog in this project 
 ----------------------------------------
 
-[27 Feb 2025 20:53]
+[27 Feb 2026 20:53]
 I started the project today Yay!!!!
 I set up all the files and folders to start coding tbh it seems hard but my planning is good
 Also I set up the read.md i think personally it look really nice
@@ -11,7 +11,7 @@ ps: Ngl im kinda excited to get this going :)
 
 ----------------------------------------
 
-[1 Mar 2025 22:22]
+[1 Mar 2026 22:22]
 Created teams and competitions table and standing table and matches table
 Starting to look like a real database
 I took like 3hrs cuz i couldnt connect the database but all worst is for best
@@ -19,7 +19,7 @@ Another 30 mins gone for other 2 tables  but they were similar so it was easy :(
 
 ----------------------------------------
 
-[2 Mar 2025 22:06]
+[2 Mar 2026 22:06]
 Created Scrape Log table 
 Added unique constraint thing to Standings Table 
 Updated Create Matches Table today 
@@ -29,7 +29,7 @@ Also today i had my physics assigment and it was kinda easy even tho i was worry
 
 ----------------------------------------
 
-[5 Mar 2025 16:38]
+[5 Mar 2026 16:38]
 I missed 3 days because i broke my foot while playing rugby somehow 
 Started the scraper today. First try got a 403 error from ESPN.
 Fixed it by adding browser headers so ESPN thinks we are a real browser
@@ -40,7 +40,7 @@ Six Nations with 15 points, Wales bottom with 1 even tho its real data it was ha
 
 ----------------------------------------
 
-[6 Mar 2025 09:01]
+[6 Mar 2026 09:01]
 Soooo im home today due to my leg so im going to add more stuff than i usually do
 Ok so rn i finished the scrapper.py where i added one of the most important parts function called parse_standings() it is made to get team data from ESPN HTML page bro but it took me like 4 hours somehow cuz i was refactoring code but omg it takes so long 
 omggg i finally got database working , it was so hard like fr like i had to add UNIQUE to team name , and also fix competitions insert 
@@ -55,7 +55,7 @@ i coded today for like 7hrs thats like so much progress im so happy
 
 ----------------------------------------
 
-[7 Mar 2025 11:08]
+[7 Mar 2026 11:08]
 Added the banner
 The csv Export 
 Also i made the descriptions to each competiton 
@@ -66,6 +66,15 @@ Evrythibng is updaring results table
 
 ----------------------------------------
 
-[8 Mar 2025 10:23]
+[8 Mar 2026 10:23]
 Added better read.me today
 added last updated stamp 
+
+----------------------------------------
+
+[21 Mar 2026 10:57]
+Soo today i made the table export look better exams are soon so loads of work has to be done
+addec cool statistics 
+specific team statistics + table 
+----------------------------------------
+

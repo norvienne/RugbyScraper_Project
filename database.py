@@ -67,6 +67,9 @@ def create_standings_table():
                 won INTEGER,
                 drawn INTEGER,
                 lost INTEGER,
+                points_for INTEGER,
+                points_against INTEGER,
+                points_diff TEXT,
                 points INTEGER,
                 scraped_date TEXT,
                 FOREIGN KEY (team_id) REFERENCES teams (team_id),
@@ -165,7 +168,18 @@ def insert_competition(competition_name, competition_type, season):
 
 
 def insert_standing(
-    team_id, competition_id, position, played, won, drawn, lost, points, scraped_date
+    team_id,
+    competition_id,
+    position,
+    played,
+    won,
+    drawn,
+    lost,
+    points_for,
+    points_against,
+    points_diff,
+    points,
+    scraped_date,
 ):
     connection = create_connection()
     cursor = connection.cursor()
@@ -173,8 +187,9 @@ def insert_standing(
         cursor.execute(
             """
             INSERT OR IGNORE INTO standings 
-            (team_id, competition_id, position, played, won, drawn, lost, points, scraped_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (team_id, competition_id, position, played, won, drawn, lost,
+             points_for, points_against, points_diff, points, scraped_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 team_id,
@@ -184,6 +199,9 @@ def insert_standing(
                 won,
                 drawn,
                 lost,
+                points_for,
+                points_against,
+                points_diff,
                 points,
                 scraped_date,
             ),
@@ -230,6 +248,28 @@ def log_scrape(records_found, status):
         connection.commit()
     except sqlite3.Error as e:
         print(f"error logging scrape: {e}")
+    finally:
+        connection.close()
+
+
+def get_known_match_ids(competition_id):
+    """returns a set of match identifiers already in the database"""
+    connection = create_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT home_team, away_team, match_date
+            FROM matches
+            WHERE competition_id = ?
+            """,
+            (competition_id,),
+        )
+        rows = cursor.fetchall()
+        return {(r[0], r[1], r[2]) for r in rows}
+    except sqlite3.Error as e:
+        print(f"error fetching known matches: {e}")
+        return set()
     finally:
         connection.close()
 
