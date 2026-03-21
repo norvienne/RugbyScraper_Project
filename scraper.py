@@ -1,7 +1,8 @@
-import time
+import asyncio
+import logging
 from datetime import date
 
-import requests
+import aiohttp
 from bs4 import BeautifulSoup
 
 from database import (
@@ -13,6 +14,10 @@ from database import (
     insert_team,
     log_scrape,
 )
+
+# ── logging ───────────────────────────────────────────────────────────────────
+
+logger = logging.getLogger(__name__)
 
 # ── network config ────────────────────────────────────────────────────────────
 
@@ -62,20 +67,32 @@ MIN_STAT_CELLS = 14
 
 # maps status code → (message, sleep_seconds, should_retry)
 STATUS_HANDLERS = {
-    404: ("  page not found (404): {url}", None, False),
-    403: ("  access denied (403) — ESPN may be blocking scrapers", None, False),
-    429: ("  rate limited (429) — waiting before retry...", 5, True),
+    404: ("page not found (404): {url}", None, False),
+    403: ("access denied (403) — ESPN may be blocking scrapers", None, False),
+    429: ("rate limited (429) — waiting before retry...", 5, True),
 }
+
+
+# ── session factory ───────────────────────────────────────────────────────────
+
+
+def _make_session(timeout_seconds: int = REQUEST_TIMEOUT) -> aiohttp.ClientSession:
+    # centralised session creation so headers and timeout are never duplicated
+    return aiohttp.ClientSession(
+        headers=REQUEST_HEADERS,
+        timeout=aiohttp.ClientTimeout(total=timeout_seconds),
+    )
+
 
 # ── connectivity ──────────────────────────────────────────────────────────────
 
 
-def is_espn_reachable() -> bool:
+async def is_espn_reachable() -> bool:
+    # returns False for any connection failure — caller decides what to show
     try:
-        r = requests.get(
-            ESPN_BASE_URL, headers=REQUEST_HEADERS, timeout=CONNECTIVITY_TIMEOUT
-        )
-        return r.status_code < 500
+        async with _make_session(CONNECTIVITY_TIMEOUT) as session:
+            async with session.get(ESPN_BASE_URL) as response:
+                return response.status < 500
     except Exception:
         return False
 
@@ -83,58 +100,64 @@ def is_espn_reachable() -> bool:
 # ── fetching ──────────────────────────────────────────────────────────────────
 
 
-def fetch_espn_page(url: str) -> str | None:
-    if not url:
-        return None
-
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            response = requests.get(
-                url, headers=REQUEST_HEADERS, timeout=REQUEST_TIMEOUT
-            )
-            response.raise_for_status()
-            return response.text
-
-        except requests.exceptions.HTTPError as e:
-            status = e.response.status_code if e.response else None
-            _handle_http_error(status, url, attempt)
-            if not _should_retry(status):
-                return None
-
-        except requests.exceptions.ConnectionError:
-            print(f"  no internet connection — attempt {attempt}/{MAX_RETRIES}")
-
-        except requests.exceptions.Timeout:
-            print(f"  request timed out — attempt {attempt}/{MAX_RETRIES}")
-
-        except requests.exceptions.RequestException as e:
-            print(f"  unexpected error: {e}")
-            return None
-
-        if attempt < MAX_RETRIES:
-            time.sleep(RETRY_DELAY)
-
-    print(f"  failed after {MAX_RETRIES} attempts: {url}")
-    return None
-
-
-def _handle_http_error(status: int, url: str, attempt: int) -> None:
+def _handle_http_error(status: int, url: str, attempt: int) -> int | None:
     msg, delay, _ = STATUS_HANDLERS.get(
         status,
-        (
-            f"  ESPN server error ({status}), attempt {attempt}/{MAX_RETRIES}",
-            None,
-            True,
-        ),
+        (f"ESPN server error ({status}), attempt {attempt}/{MAX_RETRIES}", None, True),
     )
-    print(msg.format(url=url) if "{url}" in msg else msg)
-    if delay:
-        time.sleep(delay)
+    logger.warning(msg.format(url=url) if "{url}" in msg else msg)
+    return delay
 
 
 def _should_retry(status: int) -> bool:
     _, _, retry = STATUS_HANDLERS.get(status, (None, None, True))
     return retry
+
+
+async def fetch_espn_page(session: aiohttp.ClientSession, url: str) -> str | None:
+    # fetches a single ESPN page with retries — returns None on permanent failure
+    if not url:
+        return None
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    return await response.text()
+
+                delay = _handle_http_error(response.status, url, attempt)
+                if not _should_retry(response.status):
+                    return None
+                if delay:
+                    await asyncio.sleep(delay)
+
+        except aiohttp.ClientConnectionError:
+            logger.warning(
+                "no internet connection — attempt %d/%d", attempt, MAX_RETRIES
+            )
+
+        except asyncio.TimeoutError:
+            logger.warning("request timed out — attempt %d/%d", attempt, MAX_RETRIES)
+
+        except Exception as e:
+            logger.error("unexpected error fetching %s: %s", url, e)
+            return None
+
+        if attempt < MAX_RETRIES:
+            await asyncio.sleep(RETRY_DELAY)
+
+    logger.error("failed after %d attempts: %s", MAX_RETRIES, url)
+    return None
+
+
+async def fetch_standings_html(url: str) -> str | None:
+    async with _make_session() as session:
+        return await fetch_espn_page(session, url)
+
+
+async def fetch_results_html(url: str) -> str | None:
+    async with _make_session() as session:
+        return await fetch_espn_page(session, url)
 
 
 # ── parsing helpers ───────────────────────────────────────────────────────────
@@ -213,6 +236,7 @@ def _extract_fixture_date(match) -> str:
 
 
 def parse_standings(html: str) -> list:
+    # parses ESPN standings page — returns list of team dicts or empty list
     if not html:
         return []
 
@@ -240,6 +264,7 @@ def parse_standings(html: str) -> list:
 
 
 def parse_results(html: str) -> list:
+    # parses ESPN scoreboard page — returns only completed matches
     if not html:
         return []
 
@@ -264,7 +289,7 @@ def parse_results(html: str) -> list:
             home_score_text = home_score.text.strip()
             away_score_text = away_score.text.strip()
 
-            # skip unplayed matches
+            # skip fixtures that haven't been played yet
             if not home_score_text.isdigit() or not away_score_text.isdigit():
                 continue
 
@@ -278,13 +303,15 @@ def parse_results(html: str) -> list:
                 }
             )
 
-        except Exception:
+        except Exception as e:
+            logger.debug("skipping malformed result block: %s", e)
             continue
 
     return results
 
 
 def parse_fixtures(html: str) -> list:
+    # parses ESPN scoreboard page — returns only upcoming unplayed matches
     if not html:
         return []
 
@@ -330,7 +357,8 @@ def parse_fixtures(html: str) -> list:
                 }
             )
 
-        except Exception:
+        except Exception as e:
+            logger.debug("skipping malformed fixture block: %s", e)
             continue
 
     return fixtures
@@ -372,21 +400,27 @@ def save_results(competition_id: int, results: list) -> None:
                 int(r["away_score"]),
                 r.get("date", date.today().isoformat()),
             )
-        except ValueError:
+        except ValueError as e:
+            logger.debug("skipping result with invalid score: %s", e)
             continue
 
 
-def scrape_and_save(
+# ── scraping ──────────────────────────────────────────────────────────────────
+
+
+async def scrape_and_save(
+    session: aiohttp.ClientSession,
     competition_id: int,
     url: str,
     competition_name: str,
     competition_type: str,
     season,
 ) -> bool:
+    # fetches standings and saves to db — returns True on success
     initialise_database()
     insert_competition(competition_name, competition_type, season)
 
-    html = fetch_espn_page(url)
+    html = await fetch_espn_page(session, url)
     standings = parse_standings(html)
 
     if not standings:
@@ -398,32 +432,49 @@ def scrape_and_save(
     return True
 
 
-def auto_scrape_all(competitions: dict) -> dict:
-    results = {}
-    for key, comp in competitions.items():
-        if not comp["url"]:
-            results[key] = {"success": False, "reason": "coming soon"}
-            continue
-
-        success = scrape_and_save(
-            int(key), comp["url"], comp["name"], comp["type"], comp["season"]
+async def scrape_competition(
+    competition_id: int,
+    url: str,
+    competition_name: str,
+    competition_type: str,
+    season,
+) -> bool:
+    # public wrapper — creates its own session so callers don't need aiohttp
+    async with _make_session() as session:
+        return await scrape_and_save(
+            session, competition_id, url, competition_name, competition_type, season
         )
-        results[key] = {"success": success, "name": comp["name"]}
 
-        if comp["results_url"]:
-            html = fetch_espn_page(comp["results_url"])
-            if html:
-                save_results(int(key), parse_results(html))
+
+async def auto_scrape_all(competitions: dict) -> dict:
+    # scrapes all competitions concurrently — returns dict of results per key
+    async with _make_session() as session:
+        tasks = {
+            key: asyncio.create_task(
+                scrape_and_save(
+                    session,
+                    int(key),
+                    comp["url"],
+                    comp["name"],
+                    comp["type"],
+                    comp["season"],
+                )
+            )
+            for key, comp in competitions.items()
+            if comp["url"]
+        }
+
+        results = {}
+        for key, comp in competitions.items():
+            if not comp["url"]:
+                results[key] = {"success": False, "reason": "coming soon"}
+                continue
+
+            results[key] = {"success": await tasks[key], "name": comp["name"]}
+
+            if comp["results_url"]:
+                html = await fetch_espn_page(session, comp["results_url"])
+                if html:
+                    save_results(int(key), parse_results(html))
 
     return results
-
-
-if __name__ == "__main__":
-    html = fetch_espn_page("https://www.espn.com/rugby/scoreboard/_/league/180659")
-    if html:
-        results = parse_results(html)
-        print(f"found {len(results)} matches")
-        for r in results:
-            print(f"  {r['home']} {r['home_score']} - {r['away_score']} {r['away']}")
-    else:
-        print("failed to fetch")

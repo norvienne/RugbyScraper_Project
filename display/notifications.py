@@ -4,17 +4,17 @@ from rich.console import Console
 
 from display.animations import print_animated_header
 from display.constants import NOTIFICATION_BAR_LEN
-from display.utils import clear_screen
+from display.utils import clear_screen, get_result_styles
 
 console = Console()
 
 
-def _determine_result_styles(home_score: int, away_score: int) -> tuple:
+def _get_result_char(home_score: int, away_score: int) -> str:
     if home_score > away_score:
-        return "bold green", "dim white", "▶"
+        return "▶"
     if away_score > home_score:
-        return "dim white", "bold green", "◀"
-    return "bold yellow", "bold yellow", "═"
+        return "◀"
+    return "═"
 
 
 def _flash_header(header: str, border: str) -> None:
@@ -75,9 +75,8 @@ def show_new_results_notification(new_results: list) -> None:
     for r in new_results:
         home_score = int(r["home_score"])
         away_score = int(r["away_score"])
-        home_style, away_style, result_char = _determine_result_styles(
-            home_score, away_score
-        )
+        home_style, away_style = get_result_styles(home_score, away_score)
+        result_char = _get_result_char(home_score, away_score)
         _flash_header(header, border)
         _print_result_row(r, home_style, away_style, result_char)
         _animate_result_bar()

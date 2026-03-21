@@ -1,8 +1,11 @@
 import csv
+import logging
 import os
 from datetime import date
 
 from database import create_connection
+
+logger = logging.getLogger(__name__)
 
 # ── constants ─────────────────────────────────────────────────────────────────
 
@@ -11,10 +14,12 @@ EXPORTS_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "data", "exports"
 )
 
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
 def _fetch_latest_standings(competition_id: int) -> list:
+    # fetches the most recently scraped standings for a competition
     with create_connection() as conn:
         rows = conn.execute(
             """
@@ -34,6 +39,7 @@ def _fetch_latest_standings(competition_id: int) -> list:
 
 
 def _build_export_path(competition_name: str) -> str:
+    # builds the full export filepath and ensures the exports directory exists
     os.makedirs(EXPORTS_DIR, exist_ok=True)
     filename = (
         f"{competition_name.lower().replace(' ', '_')}_{date.today().isoformat()}.csv"
@@ -45,10 +51,11 @@ def _build_export_path(competition_name: str) -> str:
 
 
 def export_standings_to_csv(competition_id: int, competition_name: str) -> str | None:
+    # exports the latest standings to a CSV file — returns the filepath or None if no data
     rows = _fetch_latest_standings(competition_id)
 
     if not rows:
-        print(f"no standings found for {competition_name}")
+        logger.warning("no standings found for %s", competition_name)
         return None
 
     filepath = _build_export_path(competition_name)

@@ -1,0 +1,5 @@
+2026-03-21 16:51:22 [DEBUG] asyncio: Using selector: EpollSelector
+2026-03-21 16:51:28 [INFO] __main__: startup scrape complete — 4 competitions succeeded
+2026-03-21 16:52:20 [INFO] __main__: exported standings for Six Nations to /home/hlibsamodin/RugbyScraper_Project/data/exports/six_nations_2026-03-21.csv
+2026-03-21 17:02:10 [DEBUG] asyncio: Using selector: EpollSelector
+2026-03-21 17:02:17 [INFO] __main__: startup scrape complete — 4 competitions succeeded

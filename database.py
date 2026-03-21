@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 from datetime import datetime
@@ -6,6 +7,8 @@ from datetime import datetime
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "rugby.db")
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+logger = logging.getLogger(__name__)
 
 # ── table definitions ─────────────────────────────────────────────────────────
 
@@ -84,6 +87,7 @@ ALL_TABLES = [
 
 
 def create_connection() -> sqlite3.Connection:
+    # opens a connection with foreign key enforcement enabled
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -96,13 +100,14 @@ def _execute(sql: str, params: tuple = ()) -> None:
             conn.execute(sql, params)
             conn.commit()
         except sqlite3.Error as e:
-            print(f"database error: {e}")
+            logger.error("database error: %s", e)
 
 
 # ── setup ─────────────────────────────────────────────────────────────────────
 
 
 def initialise_database() -> None:
+    # creates all tables if they don't already exist
     for sql in ALL_TABLES:
         _execute(sql)
 
@@ -111,6 +116,7 @@ def initialise_database() -> None:
 
 
 def insert_team(team_name: str, short_name, country, league) -> None:
+    # inserts a team — silently skips if team already exists
     if not team_name:
         return
     _execute(
@@ -120,6 +126,7 @@ def insert_team(team_name: str, short_name, country, league) -> None:
 
 
 def insert_competition(competition_name: str, competition_type: str, season) -> None:
+    # inserts a competition — silently skips if already exists
     if not competition_name:
         return
     _execute(
@@ -142,6 +149,7 @@ def insert_standing(
     points: int,
     scraped_date: str,
 ) -> None:
+    # inserts a standing row — silently skips if same team/competition/date already exists
     _execute(
         """
         INSERT OR IGNORE INTO standings
@@ -174,6 +182,7 @@ def insert_match(
     away_score: int,
     match_date: str,
 ) -> None:
+    # inserts a match result — silently skips duplicates
     _execute(
         """
         INSERT OR IGNORE INTO matches
@@ -185,6 +194,7 @@ def insert_match(
 
 
 def log_scrape(records_found: int, status: str) -> None:
+    # logs a scrape attempt with timestamp, record count and success/failure status
     _execute(
         "INSERT INTO scrape_log (scraped_at, records_found, status) VALUES (?, ?, ?)",
         (datetime.now().strftime(TIMESTAMP_FORMAT), records_found, status),
@@ -195,6 +205,7 @@ def log_scrape(records_found: int, status: str) -> None:
 
 
 def get_team_id(team_name: str) -> int | None:
+    # returns the team_id for a given team name, or None if not found
     with create_connection() as conn:
         row = conn.execute(
             "SELECT team_id FROM teams WHERE team_name = ?", (team_name,)
@@ -203,6 +214,7 @@ def get_team_id(team_name: str) -> int | None:
 
 
 def get_known_match_ids(competition_id: int) -> set:
+    # returns a set of (home, away, date) tuples for all known matches in a competition
     with create_connection() as conn:
         try:
             rows = conn.execute(
@@ -211,13 +223,14 @@ def get_known_match_ids(competition_id: int) -> set:
             ).fetchall()
             return {(r[0], r[1], r[2]) for r in rows}
         except sqlite3.Error as e:
-            print(f"error fetching known matches: {e}")
+            logger.error("error fetching known matches: %s", e)
             return set()
 
 
 def get_match_score(
     competition_id: int, home: str, away: str, match_date: str
 ) -> tuple:
+    # returns (home_score, away_score) for a match, or (0, 0) if not found
     with create_connection() as conn:
         row = conn.execute(
             """

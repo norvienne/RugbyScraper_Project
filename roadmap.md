@@ -30,6 +30,27 @@
 
 ---
 
+## ✅ v2.1 — Refactor — Shipped
+- 🏗️ display.py split into 8 focused modules
+- 🔢 All magic numbers replaced with named constants
+- 🏷️ Type hints on every function
+- 🗄️ Database connections use `with` statements consistently
+- ♻️ Duplicate result style functions merged into one
+- 🧹 Zero Ruff linter warnings
+
+---
+
+## ✅ v2.2 — Async & Tests — Shipped
+- ⚡ Async network requests with aiohttp — UI never freezes
+- 🚀 All competitions scraped concurrently at startup
+- 🪵 Python logging module — errors go to data/rugby.log
+- 📝 Docstrings on every public function
+- 🧪 34 tests — stats, scraper, database all covered
+- 📦 Pinned requirements.txt
+- 🌍 Cross-platform terminal clearing
+
+---
+
 ## 🔜 v3.0 — Deep Stats
 - 📊 More stats — bonus points, try scoring, head to head records
 - 🔴 Match timeline — scrums, lineouts, penalties, tries
@@ -41,7 +62,6 @@
 ---
 
 ## 🔜 v4.0 — Technical & Polish
-- ✅ Add tests
 - 🔄 Proper auto-refresh — scrape in background every hour
 - 🎥 YouTube highlights link per match using `webbrowser.open()`
 - 📰 Latest rugby news headlines scraped from a news site
@@ -62,3 +82,16 @@
 - 🌐 Flask web version
 - 📱 Simple API so others can use the data
 - 📲 Mobile notifications for match results
+```
+
+---
+
+**README.md** — just update the version badge and add v2.2 to features:
+
+Change:
+```
+![Version](https://img.shields.io/badge/version-2.1-green)
+```
+To:
+```
+![Version](https://img.shields.io/badge/version-2.2-green)

@@ -31,6 +31,15 @@ def is_narrow() -> bool:
     return get_terminal_width() < NARROW_TERMINAL_WIDTH
 
 
+def get_result_styles(home_score: int, away_score: int) -> tuple:
+    # returns (home_style, away_style) based on who won
+    if home_score > away_score:
+        return "bold green", "dim white"
+    if away_score > home_score:
+        return "dim white", "bold green"
+    return "bold yellow", "bold yellow"
+
+
 def show_loading_spinner(message: str = "fetching data...") -> None:
     with Live(
         Spinner("dots", text=f"[green]{message}[/green]"),

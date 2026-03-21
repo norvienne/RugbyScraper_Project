@@ -1,9 +1,19 @@
+import logging
+
 from database import create_connection
+
+logger = logging.getLogger(__name__)
+
+# ── constants ─────────────────────────────────────────────────────────────────
 
 FORM_RESULTS_LIMIT = 5
 
 
+# ── public ────────────────────────────────────────────────────────────────────
+
+
 def get_team_history(team_name: str, competition_id: int) -> list:
+    # returns all historical standings for a team in a competition, ordered by date
     with create_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -19,6 +29,26 @@ def get_team_history(team_name: str, competition_id: int) -> list:
         )
         rows = cursor.fetchall()
     return [{"position": row[0], "points": row[1], "date": row[2]} for row in rows]
+
+
+def get_team_form(team_name: str, results: list) -> list:
+    # returns last 5 results for a team as a list of W/L/D strings
+    form = []
+    for match in results:
+        result = _get_result_for_team(team_name, match)
+        if result:
+            form.append(result)
+    return form[-FORM_RESULTS_LIMIT:]
+
+
+def build_form_data(standings: list, results: list) -> dict:
+    # builds a dict mapping each team name to their last 5 results
+    return {
+        row["team_name"]: get_team_form(row["team_name"], results) for row in standings
+    }
+
+
+# ── helpers ───────────────────────────────────────────────────────────────────
 
 
 def _get_result_for_team(team_name: str, match: dict) -> str | None:
@@ -44,20 +74,3 @@ def _get_result_for_team(team_name: str, match: dict) -> str | None:
         return "D"
 
     return None
-
-
-def get_team_form(team_name: str, results: list) -> list:
-    # returns last 5 results for a team as a list of W/L/D strings
-    form = []
-    for match in results:
-        result = _get_result_for_team(team_name, match)
-        if result:
-            form.append(result)
-    return form[-FORM_RESULTS_LIMIT:]
-
-
-def build_form_data(standings: list, results: list) -> dict:
-    # builds a dict mapping each team name to their form list
-    return {
-        row["team_name"]: get_team_form(row["team_name"], results) for row in standings
-    }

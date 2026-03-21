@@ -113,4 +113,36 @@ Big refactor today — split display.py into 8 proper modules
 Fixed magic numbers, type hints, with() for db connections
 Friend helped catch a redundant check in get_team_form
 Ruff linter now clean, tagged v2.1
+
+----------------------------------------
+[21 Mar 2026 17:30]
+MASSIVE day today - basically rewrote half the project
+
+v2.1 - big refactor pass with help from a friend who knows his stuff
+- split display.py into 8 proper modules (constants, utils, animations, 
+  menu, standings, team_stats, results, notifications)
+- all magic numbers replaced with named constants
+- type hints on every single function
+- with() statements for all db connections
+- friend caught duplicate result style functions - merged into one
+- friend caught redundant check in get_team_form
+- friend caught os.system("clear") deprecation - fixed with platform.system()
+- zero Ruff linter warnings
+- tagged v2.1
+
+v2.2 - async rewrite + tests + logging
+- switched from requests to aiohttp for async network requests
+- all competitions now scraped CONCURRENTLY at startup
+- proof: 1 competition = 0.58s, all 4 = 3.22s (not 4x0.58 sequential)
+- added Python logging module - all errors/warnings go to data/rugby.log
+- added docstrings to every public function across all files
+- wrote 34 tests covering stats, scraper parsing and database operations
+- 34/34 passing
+- pinned requirements.txt, removed unused requests library
+- empty input on menu no longer crashes with "invalid choice"
+- tagged v2.2
+
+Coded for like 8hrs today ngl - exams soon but this was worth it
+Project is genuinely clean now and i actually understand why
+
 ----------------------------------------

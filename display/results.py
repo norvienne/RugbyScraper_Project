@@ -3,17 +3,9 @@ from rich.console import Console
 from rich.table import Table
 
 from display.constants import COMPETITION_COLOURS
-from display.utils import clear_screen
+from display.utils import clear_screen, get_result_styles
 
 console = Console()
-
-
-def _get_result_styles(home_score: int, away_score: int) -> tuple:
-    if home_score > away_score:
-        return "bold green", "dim white"
-    if away_score > home_score:
-        return "dim white", "bold green"
-    return "bold yellow", "bold yellow"
 
 
 def show_results(
@@ -43,7 +35,7 @@ def show_results(
         except (ValueError, KeyError):
             continue
 
-        home_style, away_style = _get_result_styles(home_score, away_score)
+        home_style, away_style = get_result_styles(home_score, away_score)
         table.add_row(
             r.get("date", ""),
             f"[{home_style}]{r['home']}[/{home_style}]",

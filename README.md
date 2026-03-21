@@ -11,7 +11,8 @@ A terminal app for live rugby scores, standings and fixtures — with animated U
 
 [![GitHub](https://img.shields.io/badge/GitHub-HlibSamodin11-black?logo=github)](https://github.com/HlibSamodin11)
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
-![Version](https://img.shields.io/badge/version-2.1-green)
+![Version](https://img.shields.io/badge/version-2.2-green)
+![Tests](https://img.shields.io/badge/tests-34%20passed-brightgreen)
 
 #### 📝 Check out the DevLog!
 
@@ -58,6 +59,16 @@ At 15, after finishing *Clean Code* by Robert C. Martin, I wanted to build somet
 - ✅ Database connections use `with` statements consistently
 - ✅ Zero Ruff linter warnings
 
+### v2.2
+- ✅ Async network requests — `aiohttp` instead of `requests`
+- ✅ All competitions scraped concurrently at startup
+- ✅ UI never freezes while waiting for ESPN
+- ✅ Cross-platform terminal clearing — works on Windows and Linux
+- ✅ Python logging — all errors written to `data/rugby.log`
+- ✅ Docstrings on every public function
+- ✅ 34 tests — stats, scraper and database all covered
+- ✅ Pinned `requirements.txt`
+
 ---
 
 ## Competitions
@@ -77,10 +88,11 @@ At 15, after finishing *Clean Code* by Robert C. Martin, I wanted to build somet
 ## Tech Stack
 
 - Python 3
-- `requests` — fetching ESPN pages
+- `aiohttp` — async fetching of ESPN pages
 - `beautifulsoup4` — parsing HTML
 - `rich` — terminal UI, tables, animations
 - `sqlite3` — storing standings and match history
+- `pytest` — testing
 
 ---
 
@@ -88,7 +100,7 @@ At 15, after finishing *Clean Code* by Robert C. Martin, I wanted to build somet
 ```
 RugbyScraper/
 ├── main.py           — entry point, coordinates everything
-├── scraper.py        — fetches and parses ESPN data
+├── scraper.py        — async fetching and parsing of ESPN data
 ├── database.py       — SQLite database operations
 ├── competitions.py   — competition URLs and config
 ├── exporter.py       — CSV export
@@ -103,6 +115,10 @@ RugbyScraper/
 │   ├── team_stats.py — team stats screen and graph
 │   ├── results.py    — results and fixtures tables
 │   └── notifications.py — new result flash notifications
+├── tests/
+│   ├── test_stats.py
+│   ├── test_scraper.py
+│   └── test_database.py
 └── data/
     ├── rugby.db      — SQLite database
     └── exports/      — exported CSV files
@@ -118,21 +134,24 @@ RugbyScraper/
 - DRY — no repeated code
 - Clear, meaningful names
 - Type hints on every function
+- Docstrings on every public function
+- Logging module instead of print statements
 - Graceful error handling throughout
 - Zero linter warnings
+- 34 tests covering core logic
 
 ---
 
 ## Installation
 ```bash
-pip install requests beautifulsoup4 rich
+pip install aiohttp beautifulsoup4 rich
 ```
 
 Or with a virtual environment (recommended on Linux):
 ```bash
 python3 -m venv venv
 source venv/bin/activate.fish  # fish shell
-pip install requests beautifulsoup4 rich
+pip install aiohttp beautifulsoup4 rich
 ```
 
 ## How to Run
